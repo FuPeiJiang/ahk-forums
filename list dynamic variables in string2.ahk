@@ -13,6 +13,7 @@ funcNames:=listDynamicVars(fileContent)
 p(funcNames)
 
 listDynamicVars(fileContent) {
+    ;ignore strings
     fileContent:=RegExReplace(fileContent, """.*?""")
     dynamicVars:={}
 
@@ -25,9 +26,6 @@ listDynamicVars(fileContent) {
     ; either var or %var%
     while(pos := RegExMatch(fileContent, "%[a-zA-Z0-9_#@$]+?%|[a-zA-Z0-9_#@$]+", dynamicVarMatch, pos)) {
 
-        ; if (dynamicVarMatch="EcurrentDir")
-        ; unlocked:=true
-        ; if (unlocked) {
         if (pos=pastPos) {
             passed:=true
             ImHoldingThis.Push(dynamicVarMatch)
@@ -39,7 +37,6 @@ listDynamicVars(fileContent) {
             ImHoldingThis:=[dynamicVarMatch]
             passed:=false
         }
-        ; }
 
         strLength:=StrLen(dynamicVarMatch)
         pos+=strLength

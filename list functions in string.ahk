@@ -12,14 +12,17 @@ funcNames:=listFunctionsInString(fileContent)
 d(funcNames)
 
 listFunctionsInString(fileContent) {
+    ;ignore strings
     fileContent:=RegExReplace(fileContent, """.*?""")
 
     funcNames:={}
 
     pos := 1
     strLength:=0
+    ;funcName can contain [a-zA-Z0-9_#@$]
     while(pos := RegExMatch(fileContent, "([0-9a-zA-Z0-9_#@$]+)\(.*?\)", funcMatch, pos + strLength)) {
         strLength:=StrLen(funcMatch)
+        ; a var name cannot be ONLY digits
         if funcMatch1 is not digit 
         {
             funcNames[funcMatch1]:=true

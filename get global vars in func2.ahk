@@ -34,15 +34,12 @@ Run, "C:\Program Files\AutoHotkey\AutoHotkeyU64.exe" "%filePath%"
 winwaitactive, % listvarsTitle
 ControlGetText, globalVarsText, Edit1, % listvarsTitle
 
-; d(globalVarsText)
 arr:=StrSplit(globalVarsText, "`n", "`r")
 arr.remove(3)
 arr.remove(3)
 arrOfVarNames:=[]
 for k, v in arr {
-    ; if (k>4) {
         arrOfVarNames.push(getUntil(v, "["))
-    ; }
 }
 dynamicVars:=listDynamicVars(sourceFunc, arrOfVarNames)
 
@@ -104,6 +101,7 @@ createGroup(groupName, titleArr) {
 ; The program will exit.
 
 listFunctionsInString(fileContent) {
+    ;ignore strings
     fileContent:=RegExReplace(fileContent, """.*?""")
 
     funcNames:={}
@@ -126,6 +124,7 @@ listFunctionsInString(fileContent) {
 }
 
 listDynamicVars(fileContent, indexVars) {
+    ;ignore strings
     fileContent:=RegExReplace(fileContent, """.*?""")
     dynamicVars:={}
 
