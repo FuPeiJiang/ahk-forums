@@ -7,7 +7,7 @@ SetBatchLines, -1
 ListLines Off
 SetTitleMatchMode, 1 ; A window's title must start with the specified WinTitle to be a match.
 
-sourcePath:="sample-input-files\renderCurrentDir2.ahk"
+sourcePath:="sample-input-files\renderCurrentDir3.ahk"
 SplitPath, sourcePath, OutFileName
 filePath:=A_Temp "\" OutFileName
 FileDelete, %filePath%
@@ -35,13 +35,15 @@ winwaitactive, % listvarsTitle
 ControlGetText, globalVarsText, Edit1, % listvarsTitle
 
 arr:=StrSplit(globalVarsText, "`n", "`r")
-arr.remove(3)
-arr.remove(3)
 arrOfVarNames:=[]
+arrOfVarNames.push(arr.remove(1))
+arrOfVarNames.push(arr.remove(1))
+arr.remove(1)
+arr.remove(1)
 for k, v in arr {
         arrOfVarNames.push(getUntil(v, "["))
 }
-dynamicVars:=listDynamicVars(sourceFunc, arrOfVarNames)
+dynamicVars:=listDynamicVars(sourceFunc)
 
 if dynamicVars.Count() {
     arrOfVarNames.push("Dynamic Vars:")
@@ -123,22 +125,65 @@ listFunctionsInString(fileContent) {
     return funcNames
 }
 
-listDynamicVars(fileContent, indexVars) {
+listDynamicVars(fileContent) {
     ;ignore strings
     fileContent:=RegExReplace(fileContent, """.*?""")
     dynamicVars:={}
 
-    for k, indexVar in indexVars {
+    fileContent:=removeComments(fileContent)
 
-        pos := 1
-        strLength:=0
-        while(pos := RegExMatch(fileContent, "[0-9a-zA-Z0-9_#@$]+%" indexVar "%", dynamicVarMatch, pos + strLength)) {
-            ; p(funcMatch)
-            strLength:=StrLen(dynamicVarMatch)
-            dynamicVars[dynamicVarMatch]:=true
+    unlocked:=false
+    pos := 1
+    strLength:=0
+    ;var can contain [a-zA-Z0-9_#@$]
+    ; either var or %var%
+    while(pos := RegExMatch(fileContent, "%[a-zA-Z0-9_#@$]+?%|[a-zA-Z0-9_#@$]+", dynamicVarMatch, pos)) {
+
+        if (pos=pastPos) {
+            passed:=true
+            ImHoldingThis.Push(dynamicVarMatch)
+        } else {
+            if (passed) {
+                strDynamicVar:=validDynamicVar(ImHoldingThis) ;this returns the array to string if all valid!
+                dynamicVars[strDynamicVar]:=true
+            }
+            ImHoldingThis:=[dynamicVarMatch]
+            passed:=false
         }
+
+        strLength:=StrLen(dynamicVarMatch)
+        pos+=strLength
+        pastPos:=pos
+        pastMatch:=dynamicVarMatch
+
     }
     return dynamicVars
+}
+
+validDynamicVar(ImHoldingThis) {
+    ; only letters without %% cannot come though, since it would be length 1, only length >1 can come here
+    ; everything here has %%, but it cannot be ONLY %%, we need at least a letter one. : that's why notBlank
+    for k, v in ImHoldingThis {
+        if (SubStr(v, 1, 1)="%") {
+            var:=SubStr(v, 2, -1)
+        } else {
+            var:=v
+            ; Error:  This dynamic variable is blank. If this variable was not intended to be dynamic, remove the % symbols from it.
+            notBlank:=true
+        }
+        ; a var name cannot be ONLY digits
+        if var is digit
+            return
+        strDynamicVar.=v
+    }
+    if (notBlank)
+        return strDynamicVar
+}
+
+removeComments(content) {
+    content:=RegExReplace(content, "sm)\/\*.*?^\s*\*\/")
+    content:=RegExReplace(content, "m`n)\s+;.*$")
+    return content
 }
 
 f3::Exitapp
